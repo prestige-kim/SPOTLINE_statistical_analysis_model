@@ -2,6 +2,10 @@
 
 본 프로젝트는 비전 AI 데이터 및 1달간의 삼겹살집 방문 이력 목업 데이터(`output.csv`)를 기반으로 **'내일 삼겹살집에 방문할 예상 고객 수'**를 예측하는 통계적 머신러닝 시스템입니다.
 
+> 💡 **주피터 노트북 뷰어 안내**: 만약 GitHub 웹 화면에서 주피터 노트북 파일(`.ipynb`) 렌더링이 지연되거나 소스코드가 제대로 보이지 않는다면, [Jupyter nbviewer 링커](https://nbviewer.org/github/prestige-kim/SPOTLINE_statistical_analysis_model/blob/main/spotline.ipynb)를 통해 쾌적하게 실행 결과 문서를 바로 보실 수 있습니다.
+>
+> 📁 **순수 파이썬 소스코드 탑재**: 주피터 노트북을 실행하지 않고 코드만 즉각 깃허브에서 검토하시길 원하시는 분들을 위해, 동일한 학습 및 추론 로직을 완벽히 포함한 단일 파이썬 스크립트인 [**`spotline_model.py`**](./spotline_model.py) 파일을 루트 폴더에 추가로 탑재했습니다.
+
 ---
 
 ## 💡 1. 릿지 회귀(Ridge Regression) 모델 선택 이유
@@ -151,7 +155,11 @@ r2 = r2_score(y_test, y_pred)
    source .venv/bin/activate  # macOS/Linux 기준
    pip install pandas numpy scikit-learn jupyter
    ```
-2. **주피터 노트북 실행 및 확인**
+2. **파이썬 스크립트 실행 (즉각 예측)**
+   ```bash
+   python spotline_model.py
+   ```
+3. **주피터 노트북 실행 및 확인**
    ```bash
    jupyter notebook spotline.ipynb
    ```
