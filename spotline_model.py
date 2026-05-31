@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, r2_score
@@ -29,7 +29,8 @@ def load_and_preprocess_data(file_path):
 def train_ridge_model(df_clean):
     """
     미래 시점(Data Leakage) 피처를 제거하고, 원핫 인코딩 및 스케일링을 거쳐
-    안정적인 L2 규제 기반 릿지 회귀 모델을 학습하고 검증합니다.
+    교차 검증(5-Fold CV) 기반 GridSearchCV 하이퍼파라미터 최적화가 적용된 
+    릿지 회귀 모델을 학습하고 검증합니다.
     """
     # 범주형 변수(weather) 원핫 인코딩
     df_encoded = pd.get_dummies(df_clean, columns=['weather'], drop_first=True)
@@ -41,7 +42,7 @@ def train_ridge_model(df_clean):
     X = df_encoded[features]
     y = df_encoded['total_count']
     
-    # Ridge의 L2 가중치 밸런스를 위한 피처 스케일링
+    # Ridge의 L2 규제 밸런스를 위한 피처 스케일링
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
@@ -50,31 +51,46 @@ def train_ridge_model(df_clean):
         X_scaled, y, test_size=0.2, random_state=42
     )
     
-    # 릿지 모델 선언 및 학습
-    model = Ridge(alpha=1.0)
-    model.fit(X_train, y_train)
+    # 릿지 회귀 그리드서치 하이퍼파라미터 최적화 범위 정의
+    param_grid = {
+        'alpha': [0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0]
+    }
     
-    # 검증 평가
-    y_pred = model.predict(X_test)
+    # 5-Fold 교차 검증 및 MAE 기준 평가지표를 통한 GridSearchCV 객체 빌드
+    grid_search = GridSearchCV(
+        estimator=Ridge(),
+        param_grid=param_grid,
+        scoring='neg_mean_absolute_error',
+        cv=5
+    )
+    grid_search.fit(X_train, y_train)
+    
+    # 최적의 릿지 모델 및 하이퍼파라미터(alpha) 획득
+    best_model = grid_search.best_estimator_
+    best_alpha = grid_search.best_params_['alpha']
+    
+    # 최적 모델로 검증 세트 예측 및 평가
+    y_pred = best_model.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
     
-    print("=================== 📊 모델 학습 및 평가 완료 ===================")
+    print("=================== 📊 GridSearchCV 모델 학습 완료 ===================")
+    print(f"최적의 규제 하이퍼파라미터 (Best alpha): {best_alpha}")
     print(f"평균 절대 오차 (MAE): {mae:.2f} 명")
     print(f"결정계수 (R² Score): {r2:.4f}")
-    print("=================================================================\n")
+    print("======================================================================\n")
     
-    print("=================== 🔑 피처별 가중치 (Coefficients) ===================")
-    for feat, coef in zip(features, model.coef_):
+    print("=================== 🔑 최적 모델 피처별 가중치 (Coefficients) ===================")
+    for feat, coef in zip(features, best_model.coef_):
         print(f" - {feat}: {coef:+.4f}")
-    print("=================================================================\n")
+    print("======================================================================\n")
     
-    return model, scaler, features
+    return best_model, scaler, features, best_alpha
 
 def predict_tomorrow(tomorrow_temp, tomorrow_weather, today_count, model, scaler, feature_columns):
     """
     내일 기온 예보, 날씨 예보, 그리고 오늘의 매장 최종 마감 정산 인원수를 통해
-    내일의 총 방문객 수를 산출하는 실시간 추론기입니다.
+    내일의 총 방문객 수를 산출하는 실시간 추론기입니다. (최적화 릿지 모델 적용)
     """
     # 내일 날짜 요일 계산
     tomorrow_date = pd.Timestamp.now() + pd.Timedelta(days=1)
@@ -114,9 +130,8 @@ def predict_tomorrow(tomorrow_temp, tomorrow_weather, today_count, model, scaler
     return final_pred
 
 if __name__ == "__main__":
-    # 실행 시 모델 훈련 및 가상 시뮬레이션 즉각 가동
     df_clean = load_and_preprocess_data('output.csv')
-    model, scaler, features = train_ridge_model(df_clean)
+    model, scaler, features, best_alpha = train_ridge_model(df_clean)
     
     # 비 내리는 평일 시나리오 테스트
     print("[가상 시뮬레이션 실행]")
