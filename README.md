@@ -72,10 +72,24 @@
 
 ## 🚀 5. 로컬 가동 가이드
 
-```bash
-# 1. 패키지 설치
-pip install pandas numpy scikit-learn
+1. **가상환경 생성 및 활성화**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # macOS/Linux 기준
+   # Windows PowerShell 기준: .venv\Scripts\Activate.ps1
+   ```
 
-# 2. 파이썬 스크립트 실행 (실시간 학습 및 예측 시뮬레이션 구동)
-python spotline_model.py
-```
+2. **의존성 패키지 설치**
+   ```bash
+   pip install pandas numpy scikit-learn jupyter
+   ```
+
+3. **파이썬 스크립트 실행 (단독 예측 및 시뮬레이션)**
+   ```bash
+   python spotline_model.py
+   ```
+
+4. **주피터 노트북 실행 및 확인**
+   ```bash
+   jupyter notebook spotline.ipynb
+   ```
