@@ -2,3 +2,12 @@
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+
+# ML Models and Scalers
+*.pkl
+
+# Temporary or local Jupyter notebooks
+myModeling.ipynb
+
+# Datasets
+studio_results_*.csv
